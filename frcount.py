@@ -59,12 +59,17 @@ async def on_message(message):
         c.execute(
             'UPDATE fr_count SET count = count + 1 WHERE guild_id = ?', (message.guild.id,))
         conn.commit()
+        print("FR found")
 
     if message.content.startswith('$counter'):
         c.execute('SELECT count FROM fr_count WHERE guild_id = ?',
                   (message.guild.id,))
-        count = c.fetchone()[0]
-        await message.channel.send(f'Amount of FRs: {count}')
+        result = c.fetchone()
+        if result:
+            count = result[0]
+            await message.channel.send(f'Amount of FRs: {count}')
+        else:
+            await message.channel.send("No FR messages found.")
 
 
 try:
