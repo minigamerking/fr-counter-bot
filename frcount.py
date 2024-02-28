@@ -2,7 +2,7 @@ import discord
 import sqlite3
 import mytokenforbot
 import os
-from flask import Flask, render_template
+from flask import Flask
 from threading import Thread
 
 app = Flask(__name__)
@@ -26,9 +26,8 @@ def keep_alive():
 
 keep_alive()
 print("Server Running Because of Axo")
-# This code is based on the following example:
-# https://discordpy.readthedocs.io/en/stable/quickstart.html#a-minimal-bot
 
+# Connect to the SQLite database
 conn = sqlite3.connect('fr_count.db')
 c = conn.cursor()
 
@@ -42,8 +41,6 @@ intents.message_content = True
 
 client = discord.Client(intents=intents)
 
-fr_count = 8
-
 
 @client.event
 async def on_ready():
@@ -56,12 +53,15 @@ async def on_message(message):
     if message.author == client.user:
         return
     if 'fr' in message.content.lower():
+        # Update the count in the database
+        c.execute(
+            'INSERT OR IGNORE INTO fr_count (guild_id, count) VALUES (?, 0)', (message.guild.id,))
         c.execute(
             'UPDATE fr_count SET count = count + 1 WHERE guild_id = ?', (message.guild.id,))
         conn.commit()
-        print("FR found")
 
     if message.content.startswith('$counter'):
+        # Retrieve the count from the database
         c.execute('SELECT count FROM fr_count WHERE guild_id = ?',
                   (message.guild.id,))
         result = c.fetchone()
@@ -71,7 +71,6 @@ async def on_message(message):
         else:
             await message.channel.send("No FR messages found.")
 
-
 try:
     token = mytokenforbot.token()
     if token == "":
@@ -79,12 +78,9 @@ try:
     client.run(token)
 except discord.HTTPException as e:
     if e.status == 429:
-        print(
-            "The Discord servers denied the connection for making too many requests"
-        )
-        print(
-            "Get help from https://stackoverflow.com/questions/66724687/in-discord-py-how-to-solve-the-error-for-toomanyrequests"
-        )
+        print("The Discord servers denied the connection for making too many requests")
+        print("Get help from https://stackoverflow.com/questions/66724687/in-discord-py-how-to-solve-the-error-for-toomanyrequests")
     else:
         raise e
+
 conn.close()
