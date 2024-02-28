@@ -1,5 +1,6 @@
 import discord
 import sqlite3
+import mytokenforbot
 import os
 from flask import Flask, render_template
 from threading import Thread
@@ -67,7 +68,7 @@ async def on_message(message):
 
 
 try:
-    token = "MTIxMjQyNzU4OTQzNjcwMjcyMA.Gz-Oej.RwNFPp_ksJ6HMIZeNA0fZHHELDABqPTRFhUGZk"
+    token = mytokenforbot.token()
     if token == "":
         raise Exception("Please add your token to the Secrets pane.")
     client.run(token)
